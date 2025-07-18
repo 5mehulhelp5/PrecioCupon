@@ -1,43 +1,107 @@
-# PrecioCupon
-Magento 2 modificación del precio con Precio Cupón COMPATIBLE con HYVA
-Extensión para modificación de precios mediate atributo de cupón
-Debes crear en tu módulo una nueva plantilla compatible, como por ejemplo:
+# Módulo Magento 2 - Santi_PrecioCupon
 
-view/frontend/templates/hyva/price/final_price.phtml
-Y en tu di.xml, sobreescribir el bloque o usar un plugin para que cargue tu template solo si está en Hyvä.
+Este módulo permite aplicar un precio personalizado a los productos simples mediante un atributo personalizado como `precio_cupon`, compatible con **Hyvä** y Magento 2.4.7-p6.
 
-composer.json del proyecto Magento
-Agrega el repositorio en tu composer.json:
+---
 
-"repositories": {
-  "santi": {
-    "type": "vcs",
-    "url": "https://github.com/santimolto/module-precio-cupon"
-  }
-}
+## 🧩 Funcionalidad
 
+- Si existe el atributo `precio_cupon` (u otro similar por tienda), y su valor es menor que el precio final (`special_price` o `regular_price`), **se aplica como precio final**.
+- El precio más alto entre `precio_cupon`, `special_price` o `regular_price` se muestra tachado.
+- Se aplica automáticamente en:
+  - Vista de producto
+  - Listado de productos (categoría)
+  - Minicarrito y carrito
+  - Checkout
 
-Y luego instálalo con:
-composer require santi/module-precio-cupon:dev-main
+---
 
-# Santi_PrecioCupon
+## ⚙️ Instalación
 
-Este módulo para Magento 2 aplica un precio especial personalizado definido mediante un atributo de producto como `precio_cupon`, `precio_cupon_fr`, etc.
+1. Añade el repositorio de GitHub en `composer.json` (si usas repositorio Git):
 
-### 🎯 Funcionalidad
+    ```json
+    "repositories": {
+      "santi/preciocupon": {
+        "type": "git",
+        "url": "https://github.com/santimolto/PrecioCupon.git"
+      }
+    }
+    ```
 
-- Si existe un valor en `precio_cupon` (o similar), y es menor que el `special_price` o el `price`, se aplicará como precio final.
-- Se muestra el precio original tachado si corresponde.
-- Funciona en: ficha de producto, listado de categoría, carrito, minicarrito y checkout.
+2. Instala el módulo:
 
-### 🛠 Instalación
+    ```bash
+    composer require santi/preciocupon:dev-main
+    bin/magento module:enable Santi_PrecioCupon
+    bin/magento setup:upgrade
+    bin/magento cache:flush
+    ```
 
-1. Añade el repositorio a tu `composer.json`:
+---
 
-```json
-"repositories": {
-  "santi": {
-    "type": "git",
-    "url": "https://github.com/santimolto/PrecioCupon.git"
-  }
-}
+## 💡 Integración con Hyvä
+
+El módulo **no añade bloques XML personalizados**, ya que modifica directamente la lógica del precio mediante **Plugin PHP** sobre `getFinalPrice()` del producto.
+
+### 🔧 Cómo reflejar visualmente el precio cupón en Hyvä
+
+Edita tu archivo `Hyvä`:
+
+`app/design/frontend/<Vendor>/<theme>/Magento_Catalog/templates/product/view/price.phtml`
+
+Agrega en la lógica donde se representa el precio:
+
+```php
+<?php
+$precioCupon = $product->getData('precio_cupon');
+$precioFinal = $product->getFinalPrice();
+$precioRegular = $product->getPrice();
+
+if ($precioCupon && $precioCupon < $precioRegular):
+?>
+    <div class="price-box">
+        <span class="special-price"><?= $block->escapeHtml(__('Special price:')) ?> <?= $precioFinal ?> €</span>
+        <span class="old-price"><s><?= $precioRegular ?> €</s></span>
+    </div>
+<?php else: ?>
+    <div class="price-box">
+        <span class="regular-price"><?= $precioRegular ?> €</span>
+    </div>
+<?php endif; ?>
+```
+
+> Puedes ajustar la lógica según el atributo personalizado que uses (`precio_cupon_fr`, `precio_cupon_it`, etc.).
+
+---
+
+## 📁 Estructura del módulo
+
+```
+Santi/
+└── PrecioCupon/
+    ├── etc/
+    │   └── di.xml
+    ├── Plugin/
+    │   └── ModifyPrice.php
+    ├── registration.php
+    └── composer.json
+```
+
+---
+
+## 🧪 Verificación
+
+Puedes verificar que la lógica esté aplicada correctamente activando el log o inspeccionando `getFinalPrice()` en el frontend o mediante `bin/magento shell`.
+
+---
+
+## 🧑‍💻 Autor
+
+Desarrollado por [@santimolto](https://github.com/santimolto)
+
+---
+
+## 📝 Licencia
+
+Este módulo se distribuye bajo licencia MIT.
