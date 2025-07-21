@@ -1,19 +1,14 @@
 {
-  "name": "santi/module-precio-cupon",
-  "description": "Módulo Magento 2 para aplicar precio especial desde atributo personalizado precio_cupon",
+  "name": "santi/preciocupon",
+  "description": "Módulo Magento 2 para mostrar el precio del cupón si existe",
   "type": "magento2-module",
   "version": "1.0.0",
-  "license": [
-    "OSL-3.0",
-    "AFL-3.0"
-  ],
   "autoload": {
+    "files": [
+      "registration.php"
+    ],
     "psr-4": {
       "Santi\\PrecioCupon\\": ""
     }
-  },
-  "require": {
-    "php": "^7.4 || ^8.1",
-    "magento/framework": ">=103.0.0"
   }
 }
